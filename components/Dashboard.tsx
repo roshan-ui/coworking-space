@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase, Member, Project } from '@/lib/supabase'
 import CreateProjectModal from './CreateProjectModal'
 import MeetingNotification from './MeetingNotification'
+import FileManager from './FileManager'
 
 const AVATARS = ['🧑‍💻', '👩‍💻', '🧑‍🎨', '👨‍🎨', '🧑‍🚀']
 const FONT = "'Times New Roman', Times, serif"
@@ -27,6 +28,7 @@ export default function Dashboard({
   const [activeTab, setActiveTab] = useState<'projects' | 'team'>('projects')
   const [joinedProjects, setJoinedProjects] = useState<Set<string>>(new Set())
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [fileManagerProject, setFileManagerProject] = useState<any>(null)
   const [activeMeeting, setActiveMeeting] = useState<any>(null)
   const [myMeeting, setMyMeeting] = useState<any>(null)
   const [notification, setNotification] = useState<any>(null)
@@ -369,7 +371,7 @@ export default function Dashboard({
                               background: 'transparent', border: '1px solid rgba(255,255,255,0.2)',
                               color: '#aaaaaa', padding: '10px 14px', borderRadius: 4, fontSize: 16,
                               textDecoration: 'none', textAlign: 'center', fontFamily: FONT, display: 'block'
-                            }}>📁 files</a>
+                            }}>📁 files</button>
                           )}
                           {!isJoined ? (
                             <button onClick={() => handleJoinProject(project.id)} style={{
@@ -446,6 +448,14 @@ export default function Dashboard({
           currentMember={currentMember}
           onClose={() => setShowCreate(false)}
           onCreated={() => { setShowCreate(false); fetchAll() }}
+        />
+      )}
+      {fileManagerProject && (
+        <FileManager
+          projectId={fileManagerProject.id}
+          projectName={fileManagerProject.name}
+          currentMember={currentMember}
+          onClose={() => setFileManagerProject(null)}
         />
       )}
     </div>
