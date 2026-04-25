@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase, Member } from '@/lib/supabase'
 
 const AVATARS = ['🧑‍💻', '👩‍💻', '🧑‍🎨', '👨‍🎨', '🧑‍🚀']
+const FONT = "'Times New Roman', Times, serif"
 
 export default function MemberSelect({ onSelect }: { onSelect: (m: Member) => void }) {
   const [members, setMembers] = useState<Member[]>([])
@@ -21,34 +22,33 @@ export default function MemberSelect({ onSelect }: { onSelect: (m: Member) => vo
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#0a0a0f',
+      background: '#000000',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      fontFamily: "'Courier New', monospace",
-      color: '#e0e0e0'
+      fontFamily: FONT,
+      color: '#ffffff'
     }}>
-      {/* Grid background */}
       <div style={{
         position: 'fixed', inset: 0, zIndex: 0,
-        backgroundImage: 'linear-gradient(rgba(0,255,180,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,180,0.03) 1px, transparent 1px)',
+        backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
         backgroundSize: '40px 40px'
       }} />
 
-      <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 600, padding: '0 24px' }}>
-        <div style={{ fontSize: 13, letterSpacing: 6, color: '#00ffb4', marginBottom: 16, textTransform: 'uppercase' }}>
+      <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 620, padding: '0 24px' }}>
+        <div style={{ fontSize: 14, letterSpacing: 6, color: '#ffffff', marginBottom: 18, textTransform: 'uppercase', fontStyle: 'italic' }}>
           cowork.dev
         </div>
-        <h1 style={{ fontSize: 36, fontWeight: 700, margin: '0 0 8px', letterSpacing: -1 }}>
+        <h1 style={{ fontSize: 40, fontWeight: 700, margin: '0 0 10px', fontStyle: 'italic' }}>
           Who are you?
         </h1>
-        <p style={{ color: '#666', fontSize: 14, marginBottom: 48 }}>
+        <p style={{ color: '#666', fontSize: 17, marginBottom: 48 }}>
           Select your member profile to enter the workspace
         </p>
 
         {loading ? (
-          <p style={{ color: '#444' }}>Loading members...</p>
+          <p style={{ color: '#444', fontSize: 17 }}>Loading members...</p>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             {members.map((member, i) => (
@@ -57,38 +57,36 @@ export default function MemberSelect({ onSelect }: { onSelect: (m: Member) => vo
                 onClick={() => onSelect(member)}
                 style={{
                   background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 12,
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 8,
                   padding: '24px 20px',
                   cursor: 'pointer',
-                  color: '#e0e0e0',
+                  color: '#ffffff',
                   textAlign: 'left',
                   transition: 'all 0.2s',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 16,
-                  fontFamily: "'Courier New', monospace"
+                  fontFamily: FONT
                 }}
                 onMouseEnter={e => {
-                  const el = e.currentTarget
-                  el.style.background = 'rgba(0,255,180,0.06)'
-                  el.style.borderColor = 'rgba(0,255,180,0.3)'
-                  el.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.08)'
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'
+                  e.currentTarget.style.transform = 'translateY(-2px)'
                 }}
                 onMouseLeave={e => {
-                  const el = e.currentTarget
-                  el.style.background = 'rgba(255,255,255,0.03)'
-                  el.style.borderColor = 'rgba(255,255,255,0.08)'
-                  el.style.transform = 'translateY(0)'
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.03)'
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
+                  e.currentTarget.style.transform = 'translateY(0)'
                 }}
               >
-                <div style={{ fontSize: 32 }}>{AVATARS[i]}</div>
+                <div style={{ fontSize: 34 }}>{AVATARS[i]}</div>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 16 }}>{member.name}</div>
-                  <div style={{ fontSize: 12, color: '#555', marginTop: 4 }}>{member.email}</div>
+                  <div style={{ fontWeight: 700, fontSize: 18 }}>{member.name}</div>
+                  <div style={{ fontSize: 14, color: '#555', marginTop: 4 }}>{member.email}</div>
                   {member.is_online && (
-                    <div style={{ fontSize: 11, color: '#00ffb4', marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00ffb4', display: 'inline-block' }} />
+                    <div style={{ fontSize: 13, color: '#aaaaaa', marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ffffff', display: 'inline-block' }} />
                       online
                     </div>
                   )}
