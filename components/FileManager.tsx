@@ -25,7 +25,6 @@ export default function FileManager({
 }) {
   const [files, setFiles] = useState<ProjectFile[]>([])
   const [uploading, setUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -37,9 +36,7 @@ export default function FileManager({
     const { data, error } = await supabase.storage
       .from('project-files')
       .list(folderPath, { sortBy: { column: 'updated_at', order: 'desc' } })
-    if (!error && data) {
-      setFiles(data as any)
-    }
+    if (!error && data) setFiles(data as any)
     setLoading(false)
   }
 
@@ -50,21 +47,16 @@ export default function FileManager({
     if (!file) return
     setUploading(true)
     setError('')
-    setUploadProgress(0)
 
     const filePath = `${folderPath}/${Date.now()}-${file.name}`
-
     const { error: uploadError } = await supabase.storage
       .from('project-files')
       .upload(filePath, file, { upsert: false })
 
-    if (uploadError) {
-      setError('Upload failed. Try again.')
-    } else {
-      await fetchFiles()
-    }
+    if (uploadError) setError('Upload failed. Try again.')
+    else await fetchFiles()
+
     setUploading(false)
-    setUploadProgress(0)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
@@ -76,7 +68,7 @@ export default function FileManager({
   }
 
   const handleDelete = async (fileName: string) => {
-    if (!confirm(`Delete "${fileName}"? This cannot be undone.`)) return
+    if (!confirm(`Delete "${displayName(fileName)}"? This cannot be undone.`)) return
     await supabase.storage.from('project-files').remove([`${folderPath}/${fileName}`])
     await fetchFiles()
   }
@@ -101,46 +93,47 @@ export default function FileManager({
     return '📁'
   }
 
-  // Strip timestamp prefix from display name
   const displayName = (name: string) => name.replace(/^\d+-/, '')
 
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 100,
-      background: 'rgba(0,0,0,0.85)',
+      background: 'rgba(0,0,0,0.88)',
       backdropFilter: 'blur(8px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: 24, fontFamily: FONT
     }} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div style={{
-        background: '#0a0a0a',
+        background: '#000000',
         border: '1px solid rgba(255,255,255,0.15)',
         borderRadius: 12,
-        width: '100%', maxWidth: 640,
-        maxHeight: '80vh',
+        width: '100%', maxWidth: 660,
+        maxHeight: '82vh',
         display: 'flex', flexDirection: 'column',
         overflow: 'hidden'
       }}>
         {/* Header */}
         <div style={{
-          padding: '22px 28px',
+          padding: '24px 30px',
           borderBottom: '1px solid rgba(255,255,255,0.08)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between'
         }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, fontStyle: 'italic', color: '#fff' }}>
+            <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, fontStyle: 'italic', color: '#fff' }}>
               {projectName}
             </h2>
-            <p style={{ margin: '4px 0 0', fontSize: 14, color: '#555' }}>Project files</p>
+            <p style={{ margin: '4px 0 0', fontSize: 15, color: '#555' }}>
+              {files.length} file{files.length !== 1 ? 's' : ''} · all members can upload & download
+            </p>
           </div>
           <button onClick={onClose} style={{
             background: 'transparent', border: 'none',
-            color: '#555', fontSize: 22, cursor: 'pointer', lineHeight: 1
+            color: '#555', fontSize: 24, cursor: 'pointer', lineHeight: 1
           }}>×</button>
         </div>
 
         {/* Upload area */}
-        <div style={{ padding: '20px 28px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ padding: '20px 30px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <input
             ref={fileInputRef}
             type="file"
@@ -149,47 +142,56 @@ export default function FileManager({
             id="file-upload"
           />
           <label htmlFor="file-upload" style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
-            border: '1px dashed rgba(255,255,255,0.2)',
-            borderRadius: 8, padding: '18px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14,
+            border: `1px dashed ${uploading ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.25)'}`,
+            borderRadius: 8, padding: '20px',
             cursor: uploading ? 'not-allowed' : 'pointer',
-            transition: 'all 0.2s',
-            background: uploading ? 'rgba(255,255,255,0.02)' : 'transparent'
+            transition: 'all 0.2s'
           }}>
-            <span style={{ fontSize: 22 }}>⬆️</span>
-            <span style={{ fontSize: 16, color: uploading ? '#555' : '#aaa' }}>
-              {uploading ? `Uploading...` : 'Click to upload any file (up to 500MB)'}
-            </span>
+            <span style={{ fontSize: 24 }}>{uploading ? '⏳' : '⬆️'}</span>
+            <div>
+              <div style={{ fontSize: 16, color: uploading ? '#555' : '#ccc', fontWeight: 600 }}>
+                {uploading ? 'Uploading, please wait...' : 'Click to upload a file'}
+              </div>
+              <div style={{ fontSize: 13, color: '#444', marginTop: 3 }}>
+                Any file type · Up to 500MB · Unity packages welcome 🎮
+              </div>
+            </div>
           </label>
-          {error && <p style={{ margin: '8px 0 0', fontSize: 14, color: '#ff4444' }}>{error}</p>}
+          {error && <p style={{ margin: '10px 0 0', fontSize: 15, color: '#ff4444' }}>{error}</p>}
         </div>
 
         {/* File list */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 28px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 30px 24px' }}>
           {loading ? (
-            <p style={{ color: '#444', fontSize: 16, textAlign: 'center', padding: '40px 0' }}>Loading files...</p>
+            <p style={{ color: '#444', fontSize: 16, textAlign: 'center', padding: '40px 0' }}>
+              Loading files...
+            </p>
           ) : files.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 0', color: '#444' }}>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>📭</div>
-              <p style={{ margin: 0, fontSize: 16 }}>No files yet. Upload something!</p>
+            <div style={{ textAlign: 'center', padding: '48px 0', color: '#444' }}>
+              <div style={{ fontSize: 40, marginBottom: 14 }}>📭</div>
+              <p style={{ margin: 0, fontSize: 17 }}>No files yet. Upload something!</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {files.map(file => (
                 <div key={file.id} style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '14px 16px',
+                  padding: '16px 18px',
                   background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.07)',
-                  borderRadius: 8, gap: 12
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 8, gap: 14
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
-                    <span style={{ fontSize: 22, flexShrink: 0 }}>{getFileIcon(file.name)}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1, minWidth: 0 }}>
+                    <span style={{ fontSize: 26, flexShrink: 0 }}>{getFileIcon(file.name)}</span>
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 15, color: '#fff', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <div style={{
+                        fontSize: 16, color: '#fff', fontWeight: 600,
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                      }}>
                         {displayName(file.name)}
                       </div>
-                      <div style={{ fontSize: 13, color: '#555', marginTop: 2 }}>
+                      <div style={{ fontSize: 14, color: '#555', marginTop: 3 }}>
                         {formatSize(file.metadata?.size)} · {new Date(file.updated_at).toLocaleDateString()}
                       </div>
                     </div>
@@ -197,13 +199,14 @@ export default function FileManager({
                   <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
                     <button onClick={() => handleDownload(file.name)} style={{
                       background: '#ffffff', color: '#000000',
-                      border: 'none', padding: '7px 14px', borderRadius: 4,
-                      fontSize: 14, fontWeight: 700, fontFamily: FONT, cursor: 'pointer'
+                      border: 'none', padding: '8px 16px', borderRadius: 4,
+                      fontSize: 15, fontWeight: 700, fontFamily: FONT, cursor: 'pointer'
                     }}>⬇ Download</button>
                     <button onClick={() => handleDelete(file.name)} style={{
                       background: 'transparent', color: '#ff4444',
-                      border: '1px solid rgba(255,60,60,0.3)', padding: '7px 12px', borderRadius: 4,
-                      fontSize: 14, fontFamily: FONT, cursor: 'pointer'
+                      border: '1px solid rgba(255,60,60,0.3)',
+                      padding: '8px 12px', borderRadius: 4,
+                      fontSize: 15, fontFamily: FONT, cursor: 'pointer'
                     }}>🗑</button>
                   </div>
                 </div>

@@ -3,11 +3,7 @@
 import { useState } from 'react'
 import { supabase, Member } from '@/lib/supabase'
 
-function generateMeetLink() {
-  const chars = 'abcdefghijklmnopqrstuvwxyz'
-  const segment = (n: number) => Array.from({ length: n }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
-  return `https://meet.google.com/${segment(3)}-${segment(4)}-${segment(3)}`
-}
+const FONT = "'Times New Roman', Times, serif"
 
 export default function CreateProjectModal({
   currentMember,
@@ -20,7 +16,6 @@ export default function CreateProjectModal({
 }) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [driveLink, setDriveLink] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -29,15 +24,13 @@ export default function CreateProjectModal({
     setLoading(true)
     setError('')
 
-    const meetLink = generateMeetLink()
-
     const { data: project, error: projectError } = await supabase
       .from('projects')
       .insert({
         name: name.trim(),
         description: description.trim() || null,
-        drive_link: driveLink.trim() || null,
-        meet_link: meetLink,
+        drive_link: null,
+        meet_link: 'https://meet.jit.si/placeholder',
         created_by: currentMember.id
       })
       .select()
@@ -49,7 +42,6 @@ export default function CreateProjectModal({
       return
     }
 
-    // Auto-join creator to project
     await supabase.from('project_members').insert({
       project_id: project.id,
       member_id: currentMember.id
@@ -59,119 +51,105 @@ export default function CreateProjectModal({
     onCreated()
   }
 
+  const inputStyle = {
+    width: '100%',
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.12)',
+    borderRadius: 6,
+    padding: '12px 14px',
+    color: '#ffffff',
+    fontSize: 16,
+    fontFamily: FONT,
+    outline: 'none',
+    boxSizing: 'border-box' as const
+  }
+
+  const labelStyle = {
+    fontSize: 12,
+    color: '#555',
+    letterSpacing: 2,
+    textTransform: 'uppercase' as const,
+    display: 'block',
+    marginBottom: 8,
+    fontFamily: FONT
+  }
+
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 100,
-      background: 'rgba(0,0,0,0.7)',
+      background: 'rgba(0,0,0,0.85)',
       backdropFilter: 'blur(8px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: 24
     }} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div style={{
-        background: '#0f0f18',
-        border: '1px solid rgba(255,255,255,0.1)',
-        borderRadius: 16,
-        padding: 32,
+        background: '#0a0a0a',
+        border: '1px solid rgba(255,255,255,0.12)',
+        borderRadius: 12,
+        padding: '32px',
         width: '100%',
         maxWidth: 480,
-        fontFamily: "'Courier New', monospace"
+        fontFamily: FONT
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
-          <h2 style={{ margin: 0, fontSize: 20, color: '#e0e0e0' }}>new project</h2>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 30 }}>
+          <h2 style={{ margin: 0, fontSize: 24, color: '#ffffff', fontStyle: 'italic', fontWeight: 700 }}>New Project</h2>
           <button onClick={onClose} style={{
             background: 'transparent', border: 'none', color: '#555',
-            fontSize: 20, cursor: 'pointer', lineHeight: 1
+            fontSize: 22, cursor: 'pointer', lineHeight: 1
           }}>×</button>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <div>
-            <label style={{ fontSize: 11, color: '#555', letterSpacing: 2, textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>
-              Project Name *
-            </label>
+            <label style={labelStyle}>Project Name *</label>
             <input
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="my-awesome-project"
-              style={{
-                width: '100%', background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8,
-                padding: '10px 14px', color: '#e0e0e0', fontSize: 14,
-                fontFamily: "'Courier New', monospace", outline: 'none',
-                boxSizing: 'border-box'
-              }}
+              style={inputStyle}
             />
           </div>
 
           <div>
-            <label style={{ fontSize: 11, color: '#555', letterSpacing: 2, textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>
-              Description
-            </label>
+            <label style={labelStyle}>Description</label>
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
               placeholder="What's this project about?"
               rows={3}
-              style={{
-                width: '100%', background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8,
-                padding: '10px 14px', color: '#e0e0e0', fontSize: 14,
-                fontFamily: "'Courier New', monospace", outline: 'none',
-                resize: 'none', boxSizing: 'border-box'
-              }}
+              style={{ ...inputStyle, resize: 'none' }}
             />
           </div>
 
-          <div>
-            <label style={{ fontSize: 11, color: '#555', letterSpacing: 2, textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>
-              Google Drive Link
-            </label>
-            <input
-              value={driveLink}
-              onChange={e => setDriveLink(e.target.value)}
-              placeholder="https://drive.google.com/drive/folders/..."
-              style={{
-                width: '100%', background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8,
-                padding: '10px 14px', color: '#e0e0e0', fontSize: 14,
-                fontFamily: "'Courier New', monospace", outline: 'none',
-                boxSizing: 'border-box'
-              }}
-            />
-            <p style={{ margin: '6px 0 0', fontSize: 11, color: '#444' }}>
-              Share a Google Drive folder where project files will live
+          <div style={{
+            padding: '14px 16px',
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 8
+          }}>
+            <p style={{ margin: 0, fontSize: 15, color: '#888', fontFamily: FONT }}>
+              📁 Files can be uploaded directly inside the project after creation
             </p>
           </div>
 
-          <div style={{ padding: '12px 14px', background: 'rgba(0,255,180,0.04)', border: '1px solid rgba(0,255,180,0.1)', borderRadius: 8 }}>
-            <p style={{ margin: 0, fontSize: 12, color: '#00ffb4' }}>
-              📹 A Google Meet link will be auto-generated for this project
-            </p>
-          </div>
-
-          {error && (
-            <p style={{ margin: 0, fontSize: 13, color: '#ff6464' }}>{error}</p>
-          )}
+          {error && <p style={{ margin: 0, fontSize: 15, color: '#ff4444', fontFamily: FONT }}>{error}</p>}
 
           <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
             <button onClick={onClose} style={{
               flex: 1, background: 'transparent',
-              border: '1px solid rgba(255,255,255,0.08)',
-              color: '#555', padding: '10px', borderRadius: 8,
-              cursor: 'pointer', fontSize: 13,
-              fontFamily: "'Courier New', monospace"
-            }}>
-              cancel
-            </button>
+              border: '1px solid rgba(255,255,255,0.1)',
+              color: '#666', padding: '12px', borderRadius: 6,
+              cursor: 'pointer', fontSize: 16, fontFamily: FONT
+            }}>Cancel</button>
             <button onClick={handleCreate} disabled={loading} style={{
-              flex: 2, background: loading ? '#00b37e' : '#00ffb4',
-              border: 'none', color: '#0a0a0f',
-              padding: '10px', borderRadius: 8,
+              flex: 2,
+              background: loading ? '#555' : '#ffffff',
+              border: 'none', color: '#000000',
+              padding: '12px', borderRadius: 6,
               cursor: loading ? 'not-allowed' : 'pointer',
-              fontSize: 13, fontWeight: 700,
-              fontFamily: "'Courier New', monospace"
+              fontSize: 16, fontWeight: 700, fontFamily: FONT
             }}>
-              {loading ? 'creating...' : 'create project'}
+              {loading ? 'Creating...' : 'Create Project'}
             </button>
           </div>
         </div>
