@@ -8,11 +8,13 @@ const FONT = "'Times New Roman', Times, serif"
 export default function CreateProjectModal({
   currentMember,
   onClose,
-  onCreated
+  onCreated,
+  roomId
 }: {
   currentMember: Member
   onClose: () => void
   onCreated: () => void
+  roomId?: string
 }) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -25,7 +27,14 @@ export default function CreateProjectModal({
     setError('')
     const { data: project, error: projectError } = await supabase
       .from('projects')
-      .insert({ name: name.trim(), description: description.trim() || null, drive_link: null, meet_link: 'https://meet.jit.si/placeholder', created_by: currentMember.id })
+      .insert({ 
+        name: name.trim(), 
+        description: description.trim() || null, 
+        drive_link: null, 
+        meet_link: 'https://meet.jit.si/placeholder', 
+        created_by: currentMember.id,
+        room_id: roomId || null
+      })
       .select().single()
     if (projectError) { setError('Failed to create project. Try again.'); setLoading(false); return }
     await supabase.from('project_members').insert({ project_id: project.id, member_id: currentMember.id })
@@ -37,7 +46,7 @@ export default function CreateProjectModal({
     <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div style={{ background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, padding: '32px', width: '100%', maxWidth: 480, fontFamily: FONT }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 30 }}>
-          <h2 style={{ margin: 0, fontSize: 24, color: '#ffffff', fontStyle: 'italic', fontWeight: 700 }}>New Project</h2>
+          <h2 style={{ margin: 0, fontSize: 24, color: '#ffffff', fontStyle: 'italic', fontWeight: 700 }}>New Project {roomId ? '(Room)' : ''}</h2>
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#555', fontSize: 22, cursor: 'pointer' }}>x</button>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -62,3 +71,4 @@ export default function CreateProjectModal({
     </div>
   )
 }
+ 
